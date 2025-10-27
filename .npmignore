@@ -1,0 +1,38 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Tests
+**/*.test.*
+**/*.spec.*
+__tests__/
+coverage/
+
+# Development files
+.env
+.env.*
+tsconfig.json
+.gitignore
+
+# Documentation (keep README.md)
+docs/
+
+# LanceDB database files
+*.lance
+lancedb/
+test-lancedb/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.github/

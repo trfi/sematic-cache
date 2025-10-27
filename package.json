@@ -1,0 +1,47 @@
+{
+  "name": "sematic-cache",
+  "version": "1.0.0",
+  "description": "Semantic Cache is a tool for caching natural text based on semantic similarity using LanceDB and VoyageAI",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit",
+    "prepublishOnly": "bun run build",
+    "dev": "tsc -p tsconfig.build.json --watch"
+  },
+  "keywords": [
+    "semantic",
+    "cache",
+    "vector",
+    "lancedb",
+    "voyageai",
+    "embeddings",
+    "similarity",
+    "nlp",
+    "ai"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@lancedb/lancedb": "^0.22.2",
+    "voyageai": "^0.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8",
+    "typescript": "^5",
+    "@types/bun": "latest"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/sematic-cache.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/sematic-cache/issues"
+  },
+  "homepage": "https://github.com/yourusername/sematic-cache#readme"
+}
