@@ -9,6 +9,33 @@ interface CacheRecord extends Record<string, unknown> {
   vector: number[]
 }
 
+/**
+ * Search result returned by the search() method
+ * Contains detailed information about cache matches including similarity scores
+ */
+export interface SearchResult {
+  /**
+   * Unique identifier of the cached record
+   */
+  id: string
+
+  /**
+   * Original text that was used as the cache key
+   */
+  text: string
+
+  /**
+   * The cached value associated with the key
+   */
+  value: string
+
+  /**
+   * Cosine similarity score between the query and this record (0-1)
+   * Higher values indicate better matches
+   */
+  similarity: number
+}
+
 export type StorageOptions = {
   /**
    * AWS Access Key ID
@@ -377,6 +404,70 @@ export class SemanticCache {
       await this.initializeTable()
     } catch (error) {
       console.error('Error flushing cache:', error)
+    }
+  }
+
+  /**
+   * Search for similar cache entries and return detailed results with similarity scores
+   * This method does NOT filter by minProximity and is useful for debugging
+   *
+   * @param key - The query text to search for
+   * @param limit - Maximum number of results to return (default: 5)
+   * @returns Array of SearchResult objects sorted by similarity (highest first)
+   *
+   * @example
+   * ```typescript
+   * const results = await cache.search('What is the capital of France?', 3)
+   * results.forEach(result => {
+   *   console.log(`Text: ${result.text}`)
+   *   console.log(`Value: ${result.value}`)
+   *   console.log(`Similarity: ${result.similarity}`)
+   * })
+   * ```
+   */
+  async search(key: string, limit: number = 5): Promise<SearchResult[]> {
+    await this.initializeTable()
+
+    if (!this.table) {
+      return []
+    }
+
+    try {
+      const queryEmbedding = await this.getEmbedding(key)
+
+      // Get top N records from the table using vectorSearch
+      const allRecords = await this.table.vectorSearch(queryEmbedding).limit(limit).toArray()
+
+      if (allRecords.length === 0) {
+        return []
+      }
+
+      // Convert records to SearchResult with similarity scores
+      const results: SearchResult[] = allRecords.map((record) => {
+        const cacheRecord = record as CacheRecord
+
+        // Convert record.vector to array if it's not already (handles Arrow Vector objects from LanceDB)
+        const recordVector = Array.isArray(cacheRecord.vector)
+          ? cacheRecord.vector
+          : Array.from(cacheRecord.vector) as number[]
+
+        const similarity = this.cosineSimilarity(queryEmbedding, recordVector)
+
+        return {
+          id: cacheRecord.id,
+          text: cacheRecord.text,
+          value: cacheRecord.value,
+          similarity: similarity
+        }
+      })
+
+      // Sort by similarity descending (highest first)
+      results.sort((a, b) => b.similarity - a.similarity)
+
+      return results
+    } catch (error) {
+      console.error('Error searching cache:', error)
+      return []
     }
   }
 

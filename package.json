@@ -1,7 +1,7 @@
 {
   "name": "sematic-cache",
-  "version": "1.0.0",
-  "description": "Semantic Cache is a tool for caching natural text based on semantic similarity using LanceDB and VoyageAI",
+  "version": "1.0.1",
+  "description": "Semantic Cache is a tool for caching natural text based on semantic similarity using LanceDB",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -38,10 +38,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/sematic-cache.git"
+    "url": "https://github.com/trfi/sematic-cache.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/sematic-cache/issues"
+    "url": "https://github.com/trfi/sematic-cache/issues"
   },
-  "homepage": "https://github.com/yourusername/sematic-cache#readme"
+  "homepage": "https://github.com/trfi/sematic-cache#readme"
 }

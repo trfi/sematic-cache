@@ -24,7 +24,7 @@ Sematic Cache allows you to:
 ### Prerequisites
 
 - A VoyageAI API key (get one [here](https://www.voyageai.com/))
-- Node.js 16+ or Bun runtime
+- Node.js 20+ or Bun runtime
 
 ### Installation
 
@@ -64,46 +64,11 @@ All configuration options can be set via environment variables or passed directl
 
 Here's how you can use Sematic Cache in your Node.js application:
 
-#### Option 1: Using Environment Variables
-
 ```typescript
 import { SemanticCache } from "sematic-cache";
 
 // 👇 Configuration loaded from .env file
 const semanticCache = new SemanticCache();
-
-async function runDemo() {
-  await semanticCache.set("Capital of Turkey", "Ankara");
-  await delay(1000);
-
-  // 👇 outputs: "Ankara"
-  const result = await semanticCache.get("What is Turkey's capital?");
-  console.log(result);
-
-  // Don't forget to close the connection when done
-  await semanticCache.close();
-}
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-runDemo();
-```
-
-#### Option 2: Using Constructor Configuration
-
-```typescript
-import { SemanticCache } from "sematic-cache";
-
-// 👇 your semantic cache with explicit configuration
-const semanticCache = new SemanticCache({
-  minProximity: 0.95,
-  voyageApiKey: process.env.VOYAGE_API_KEY!,
-  dbUri: "./my-cache-db", // optional, defaults to "./lancedb"
-  tableName: "my_cache", // optional, defaults to "semantic_cache"
-  voyageModel: "voyage-3.5" // optional, defaults to "voyage-3.5"
-});
 
 async function runDemo() {
   await semanticCache.set("Capital of Turkey", "Ankara");
@@ -355,6 +320,38 @@ const results = await semanticCache.get([
 console.log(results); // ["Paris", "Berlin"]
 ```
 
+### Search API
+
+The `search()` method helps you understand why queries match or don't match:
+
+```typescript
+// Set some cache entries
+await semanticCache.set("Best practices for TypeScript", "Use strict mode, enable type checking, avoid any");
+await delay(1000);
+
+// Use search() to see similarity scores
+const results = await semanticCache.search("TypeScript coding tips", 3);
+
+results.forEach(result => {
+  console.log(`Similarity: ${result.similarity.toFixed(4)}`);
+  console.log(`Text: "${result.text}"`);
+  console.log(`Value: "${result.value}"`);
+  console.log(`Match: ${result.similarity >= 0.9 ? "✓" : "✗"}`);
+  console.log('---');
+});
+
+// Output example:
+// Similarity: 0.7143
+// Text: "Best practices for TypeScript"
+// Value: "Use strict mode, enable type checking, avoid any"
+// Match: ✗  (below 0.9 threshold)
+```
+
+This helps you:
+- Understand why `get()` returns `undefined` for certain queries
+- Find the optimal `minProximity` threshold
+- See which cached entries are semantically similar to your query
+
 ## API Reference
 
 ### `new SemanticCache(config)`
@@ -370,6 +367,10 @@ Store a value or multiple values in the cache.
 ### `get(keys: string[]): Promise<(string | undefined)[]>`
 
 Retrieve a value or multiple values from the cache.
+
+### `search(key: string, limit?: number): Promise<SearchResult[]>`
+
+Search for similar cache entries and return detailed results with similarity scores.
 
 ### `delete(key: string): Promise<number>`
 
@@ -394,12 +395,3 @@ We appreciate your contributions! If you'd like to contribute to this project, p
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
-## Differences from @upstash/semantic-cache
-
-This package uses:
-- **LanceDB** instead of Upstash Vector for the vector database backend
-- **VoyageAI** (voyageai npm package) instead of built-in embeddings for generating text embeddings
-- Local file-based storage instead of cloud-based storage (though LanceDB supports cloud deployment)
-
-The API remains largely compatible with @upstash/semantic-cache for easy migration.
