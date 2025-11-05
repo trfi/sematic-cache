@@ -1,6 +1,6 @@
 # Sematic Cache
 
-Sematic Cache is a tool for caching natural text based on semantic similarity using LanceDB and VoyageAI. It's ideal for any task that involves querying or retrieving information based on meaning, such as natural language classification or caching AI responses. Two pieces of text can be similar but not identical (e.g., "great places to check out in Spain" vs. "best places to visit in Spain"). Traditional caching doesn't recognize this semantic similarity and misses opportunities for reuse.
+Sematic Cache is a tool for caching natural text based on semantic similarity using LanceDB with multiple embedding provider support (OpenAI, Google Gemini, VoyageAI). It's ideal for any task that involves querying or retrieving information based on meaning, such as natural language classification or caching AI responses. Two pieces of text can be similar but not identical (e.g., "great places to check out in Spain" vs. "best places to visit in Spain"). Traditional caching doesn't recognize this semantic similarity and misses opportunities for reuse.
 
 Sematic Cache allows you to:
 
@@ -10,21 +10,25 @@ Sematic Cache allows you to:
 
 ## Highlights
 
+- **Multiple Embedding Providers**: Choose from OpenAI, Google Gemini, or VoyageAI
 - **Uses semantic similarity**: Stores cache entries by their meaning, not just the literal characters
 - **Handles synonyms**: Recognizes and handles synonyms
-- **Multi-language support**: Works across different languages (supported by VoyageAI embedding models)
+- **Multi-language support**: Works across different languages
 - **Complex query support**: Understands long and nested user queries
 - **Easy integration**: Simple API for usage in Node.js applications
 - **Customizable**: Set a custom proximity threshold to filter out less relevant results
 - **LanceDB backend**: Fast and scalable vector database
-- **VoyageAI embeddings**: High-quality embeddings for semantic understanding
+- **Flexible configuration**: Configure via environment variables or constructor options
 
 ## Getting Started
 
 ### Prerequisites
 
-- A VoyageAI API key (get one [here](https://www.voyageai.com/))
-- Node.js 20+ or Bun runtime
+- An API key for your chosen embedding provider:
+  - **OpenAI**: Get one [here](https://platform.openai.com/api-keys)
+  - **Google Gemini**: Get one [here](https://ai.google.dev/)
+  - **VoyageAI**: Get one [here](https://www.voyageai.com/)
+- Node.js 18+ or Bun runtime
 
 ### Installation
 
@@ -42,16 +46,37 @@ pnpm add sematic-cache
 
 ### Setup
 
-First, get your VoyageAI API key from [VoyageAI](https://www.voyageai.com/).
+First, get an API key from your chosen embedding provider.
 
 Create a `.env` file in the root directory of your project and add your configuration:
 
-```plaintext
-# Required
-VOYAGE_API_KEY=your_voyage_api_key_here
+#### Using OpenAI
 
-# Optional - Override defaults
-VOYAGE_MODEL=voyage-3.5-lite        # Default: voyage-3.5-lite
+```plaintext
+EMBED_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=text-embedding-3-small  # Optional, default: text-embedding-3-small
+```
+
+#### Using Google Gemini
+
+```plaintext
+EMBED_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=text-embedding-004      # Optional, default: text-embedding-004
+```
+
+#### Using VoyageAI
+
+```plaintext
+EMBED_PROVIDER=voyage
+VOYAGE_API_KEY=your_voyage_api_key_here
+VOYAGE_MODEL=voyage-3.5-lite         # Optional, default: voyage-3.5-lite
+```
+
+#### Additional Optional Configuration
+
+```plaintext
 LANCEDB_URI=./lancedb               # Default: ./lancedb
 CACHE_TABLE_NAME=semantic_cache     # Default: semantic_cache
 CACHE_NAMESPACE=                    # Default: (none)
@@ -102,8 +127,9 @@ import { SemanticCache } from "sematic-cache";
 
 // 👇 your semantic cache with namespace
 const semanticCache = new SemanticCache({
+  provider: 'openai',
+  openaiApiKey: process.env.OPENAI_API_KEY!,
   minProximity: 0.95,
-  voyageApiKey: process.env.VOYAGE_API_KEY!,
   namespace: "user1"
 });
 
@@ -119,14 +145,34 @@ All configuration options are optional and can be set via:
 
 ```typescript
 type SemanticCacheConfig = {
-  minProximity?: number;           // 0-1, similarity threshold (default: 0.9)
-                                   // ENV: CACHE_MIN_PROXIMITY
+  // Embedding Provider Configuration
+  provider?: 'openai' | 'gemini' | 'voyage';  // Provider choice (default: "voyage")
+                                               // ENV: EMBED_PROVIDER
 
-  voyageApiKey?: string;           // VoyageAI API key (required)
+  // OpenAI Configuration
+  openaiApiKey?: string;           // OpenAI API key (required if provider is 'openai')
+                                   // ENV: OPENAI_API_KEY
+
+  openaiModel?: string;            // OpenAI model (default: "text-embedding-3-small")
+                                   // ENV: OPENAI_MODEL
+
+  // Gemini Configuration
+  geminiApiKey?: string;           // Gemini API key (required if provider is 'gemini')
+                                   // ENV: GEMINI_API_KEY
+
+  geminiModel?: string;            // Gemini model (default: "text-embedding-004")
+                                   // ENV: GEMINI_MODEL
+
+  // VoyageAI Configuration
+  voyageApiKey?: string;           // VoyageAI API key (required if provider is 'voyage')
                                    // ENV: VOYAGE_API_KEY
 
   voyageModel?: string;            // VoyageAI model (default: "voyage-3.5-lite")
                                    // ENV: VOYAGE_MODEL
+
+  // Cache Configuration
+  minProximity?: number;           // 0-1, similarity threshold (default: 0.9)
+                                   // ENV: CACHE_MIN_PROXIMITY
 
   dbUri?: string;                  // LanceDB URI (default: "./lancedb")
                                    // ENV: LANCEDB_URI
@@ -141,14 +187,35 @@ type SemanticCacheConfig = {
 
 ### Environment Variables Reference
 
+#### Core Configuration
+
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `VOYAGE_API_KEY` | VoyageAI API key (required) | - |
-| `VOYAGE_MODEL` | VoyageAI embedding model | `voyage-3.5-lite` |
+| `EMBED_PROVIDER` | Embedding provider (`openai`, `gemini`, or `voyage`) | `voyage` |
 | `LANCEDB_URI` | Path to LanceDB storage (local or S3 URI) | `./lancedb` |
 | `CACHE_TABLE_NAME` | Name of the cache table | `semantic_cache` |
 | `CACHE_NAMESPACE` | Optional namespace for isolation | - |
 | `CACHE_MIN_PROXIMITY` | Minimum similarity threshold (0-1) | `0.9` |
+
+#### Provider-Specific Variables
+
+**OpenAI**
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OPENAI_API_KEY` | OpenAI API key | - |
+| `OPENAI_MODEL` | OpenAI embedding model | `text-embedding-3-small` |
+
+**Google Gemini**
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GEMINI_API_KEY` | Gemini API key | - |
+| `GEMINI_MODEL` | Gemini embedding model | `text-embedding-004` |
+
+**VoyageAI**
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VOYAGE_API_KEY` | VoyageAI API key | - |
+| `VOYAGE_MODEL` | VoyageAI embedding model | `voyage-3.5-lite` |
 
 #### S3 / S3-Compatible Storage Variables
 
@@ -173,7 +240,8 @@ Sematic Cache supports S3 and S3-compatible storage (AWS S3, Cloudflare R2, MinI
 import { SemanticCache } from "sematic-cache";
 
 const cache = new SemanticCache({
-  voyageApiKey: process.env.VOYAGE_API_KEY!,
+  provider: 'openai',
+  openaiApiKey: process.env.OPENAI_API_KEY!,
   dbUri: "s3://my-r2-bucket/cache-data",
   storageOptions: {
     awsAccessKeyId: process.env.R2_ACCESS_KEY_ID!,
@@ -190,7 +258,8 @@ const cache = new SemanticCache({
 import { SemanticCache } from "sematic-cache";
 
 const cache = new SemanticCache({
-  voyageApiKey: process.env.VOYAGE_API_KEY!,
+  provider: 'gemini',
+  geminiApiKey: process.env.GEMINI_API_KEY!,
   dbUri: "s3://my-s3-bucket/cache-data",
   storageOptions: {
     awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID!,
@@ -206,6 +275,7 @@ const cache = new SemanticCache({
 import { SemanticCache } from "sematic-cache";
 
 const cache = new SemanticCache({
+  provider: 'voyage',
   voyageApiKey: process.env.VOYAGE_API_KEY!,
   dbUri: "s3://my-bucket/cache-data",
   storageOptions: {
@@ -223,7 +293,8 @@ const cache = new SemanticCache({
 Set these in your `.env` file:
 
 ```plaintext
-VOYAGE_API_KEY=your_voyage_api_key
+EMBED_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key
 LANCEDB_URI=s3://my-r2-bucket/cache-data
 AWS_ACCESS_KEY_ID=your_r2_access_key
 AWS_SECRET_ACCESS_KEY=your_r2_secret_key
@@ -235,6 +306,62 @@ Then simply instantiate without arguments:
 
 ```typescript
 const cache = new SemanticCache();
+```
+
+## Provider Examples
+
+### Using OpenAI
+
+```typescript
+import { SemanticCache } from "sematic-cache";
+
+const cache = new SemanticCache({
+  provider: 'openai',
+  openaiApiKey: process.env.OPENAI_API_KEY!,
+  openaiModel: 'text-embedding-3-small' // or 'text-embedding-3-large'
+});
+
+await cache.set("What is the speed of light?", "299,792,458 meters per second");
+await delay(1000);
+
+const result = await cache.get("How fast does light travel?");
+console.log(result); // "299,792,458 meters per second"
+```
+
+### Using Google Gemini
+
+```typescript
+import { SemanticCache } from "sematic-cache";
+
+const cache = new SemanticCache({
+  provider: 'gemini',
+  geminiApiKey: process.env.GEMINI_API_KEY!,
+  geminiModel: 'text-embedding-004'
+});
+
+await cache.set("What is the speed of light?", "299,792,458 meters per second");
+await delay(1000);
+
+const result = await cache.get("How fast does light travel?");
+console.log(result); // "299,792,458 meters per second"
+```
+
+### Using VoyageAI
+
+```typescript
+import { SemanticCache } from "sematic-cache";
+
+const cache = new SemanticCache({
+  provider: 'voyage',
+  voyageApiKey: process.env.VOYAGE_API_KEY!,
+  voyageModel: 'voyage-3.5-lite' // or 'voyage-3'
+});
+
+await cache.set("What is the speed of light?", "299,792,458 meters per second");
+await delay(1000);
+
+const result = await cache.get("How fast does light travel?");
+console.log(result); // "299,792,458 meters per second"
 ```
 
 ## Examples

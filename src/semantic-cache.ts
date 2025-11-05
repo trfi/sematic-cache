@@ -1,5 +1,5 @@
 import { connect, Connection, Table } from '@lancedb/lancedb'
-import { VoyageAIClient } from 'voyageai'
+import { EmbeddingProvider, EmbeddingProviderFactory, ProviderConfig } from './providers'
 
 // LanceDB expects Record<string, unknown> for data
 interface CacheRecord extends Record<string, unknown> {
@@ -89,26 +89,13 @@ export type StorageOptions = {
   connectTimeout?: string
 }
 
-export type SemanticCacheConfig = {
+export type SemanticCacheConfig = ProviderConfig & {
   /**
    * A value between 0 and 1. If you set it to 1.0 then it acts like a hash map which means only exact lexical matches will be returned.
    * If you set it to 0.0 then it acts like a full text search query which means a value with the best proximity score (closest value) will be returned.
    * @default 0.9
    */
   minProximity?: number
-
-  /**
-   * VoyageAI API key for embeddings
-   * Can be set via VOYAGE_API_KEY environment variable
-   */
-  voyageApiKey?: string
-
-  /**
-   * VoyageAI model to use for embeddings
-   * Can be set via VOYAGE_MODEL environment variable
-   * @default "voyage-2"
-   */
-  voyageModel?: string
 
   /**
    * LanceDB connection URI
@@ -140,27 +127,20 @@ export type SemanticCacheConfig = {
 
 export class SemanticCache {
   private minProximity: number
-  private voyageAI: VoyageAIClient
+  private embeddingProvider: EmbeddingProvider
   private connection: Connection | null = null
   private table: Table | null = null
   private dbUri: string
   private tableName: string
   private namespace?: string
-  private voyageModel: string
   private storageOptions?: StorageOptions
 
   constructor(config: SemanticCacheConfig = {}) {
-    // Get configuration from config object or environment variables
-    const apiKey = config.voyageApiKey || process.env.VOYAGE_API_KEY
-    if (!apiKey) {
-      throw new Error('VoyageAI API key is required. Set it via config.voyageApiKey or VOYAGE_API_KEY environment variable.')
-    }
+    // Create the embedding provider using the factory
+    this.embeddingProvider = EmbeddingProviderFactory.createProvider(config)
 
+    // Get configuration from config object or environment variables
     this.minProximity = config.minProximity ?? (Number(process.env.CACHE_MIN_PROXIMITY) || 0.9)
-    this.voyageAI = new VoyageAIClient({
-      apiKey: apiKey
-    })
-    this.voyageModel = config.voyageModel || process.env.VOYAGE_MODEL || 'voyage-3.5-lite'
     this.dbUri = config.dbUri || process.env.LANCEDB_URI || './lancedb'
 
     const namespace = config.namespace || process.env.CACHE_NAMESPACE
@@ -240,15 +220,7 @@ export class SemanticCache {
 
   private async getEmbedding(text: string): Promise<number[]> {
     try {
-      const response = await this.voyageAI.embed({
-        input: text,
-        model: this.voyageModel
-      })
-
-      if (response.data && response.data.length > 0 && response.data[0]?.embedding) {
-        return response.data[0].embedding
-      }
-      throw new Error('No embedding returned from VoyageAI')
+      return await this.embeddingProvider.embed(text)
     } catch (error) {
       throw new Error(
         `Failed to get embedding: ${error instanceof Error ? error.message : 'Unknown error'}`
