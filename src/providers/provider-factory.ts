@@ -1,4 +1,4 @@
-import { EmbeddingProvider } from './embedding-provider'
+import { type EmbeddingProvider } from './embedding-provider'
 import { OpenAIEmbeddingProvider } from './openai-provider'
 import { GeminiEmbeddingProvider } from './gemini-provider'
 import { VoyageEmbeddingProvider } from './voyage-provider'
@@ -35,7 +35,7 @@ export interface ProviderConfig {
   /**
    * Gemini model to use for embeddings
    * Can be set via GEMINI_MODEL environment variable
-   * @default "text-embedding-004"
+   * @default "gemini-embedding-001"
    */
   geminiModel?: string
 
@@ -103,7 +103,7 @@ export class EmbeddingProviderFactory {
       )
     }
 
-    const model = config.geminiModel || process.env.GEMINI_MODEL || 'text-embedding-004'
+    const model = config.geminiModel || process.env.GEMINI_MODEL || 'gemini-embedding-001'
     return new GeminiEmbeddingProvider(apiKey, model)
   }
 

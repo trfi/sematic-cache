@@ -1,4 +1,4 @@
-import { EmbeddingProvider } from './embedding-provider'
+import { type EmbeddingProvider } from './embedding-provider'
 
 /**
  * Google Gemini embedding provider implementation
@@ -9,7 +9,7 @@ export class GeminiEmbeddingProvider implements EmbeddingProvider {
   private model: string
   private baseURL: string
 
-  constructor(apiKey: string, model: string = 'text-embedding-004') {
+  constructor(apiKey: string, model: string = 'gemini-embedding-001') {
     if (!apiKey) {
       throw new Error('Gemini API key is required')
     }

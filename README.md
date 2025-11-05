@@ -1,6 +1,6 @@
 # Sematic Cache
 
-Sematic Cache is a tool for caching natural text based on semantic similarity using LanceDB with multiple embedding provider support (OpenAI, Google Gemini, VoyageAI). It's ideal for any task that involves querying or retrieving information based on meaning, such as natural language classification or caching AI responses. Two pieces of text can be similar but not identical (e.g., "great places to check out in Spain" vs. "best places to visit in Spain"). Traditional caching doesn't recognize this semantic similarity and misses opportunities for reuse.
+Sematic Cache is library for caching natural text based on semantic similarity using LanceDB with multiple embedding provider support (OpenAI, Google Gemini, VoyageAI). It's ideal for any task that involves querying or retrieving information based on meaning, such as natural language classification or caching AI responses. Two pieces of text can be similar but not identical (e.g., "great places to check out in Spain" vs. "best places to visit in Spain"). Traditional caching doesn't recognize this semantic similarity and misses opportunities for reuse.
 
 Sematic Cache allows you to:
 
@@ -63,7 +63,7 @@ OPENAI_MODEL=text-embedding-3-small  # Optional, default: text-embedding-3-small
 ```plaintext
 EMBED_PROVIDER=gemini
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=text-embedding-004      # Optional, default: text-embedding-004
+GEMINI_MODEL=gemini-embedding-001      # Optional, default: gemini-embedding-001
 ```
 
 #### Using VoyageAI
@@ -92,14 +92,14 @@ Here's how you can use Sematic Cache in your Node.js application:
 ```typescript
 import { SemanticCache } from "sematic-cache";
 
-// 👇 Configuration loaded from .env file
+// Configuration loaded from .env file
 const semanticCache = new SemanticCache();
 
 async function runDemo() {
   await semanticCache.set("Capital of Turkey", "Ankara");
   await delay(1000);
 
-  // 👇 outputs: "Ankara"
+  // Outputs: "Ankara"
   const result = await semanticCache.get("What is Turkey's capital?");
   console.log(result);
 
@@ -125,7 +125,7 @@ You can separate your data into partitions with namespaces.
 ```typescript
 import { SemanticCache } from "sematic-cache";
 
-// 👇 your semantic cache with namespace
+// Your semantic cache with namespace
 const semanticCache = new SemanticCache({
   provider: 'openai',
   openaiApiKey: process.env.OPENAI_API_KEY!,
@@ -148,38 +148,28 @@ type SemanticCacheConfig = {
   // Embedding Provider Configuration
   provider?: 'openai' | 'gemini' | 'voyage';  // Provider choice (default: "voyage")
                                                // ENV: EMBED_PROVIDER
-
   // OpenAI Configuration
   openaiApiKey?: string;           // OpenAI API key (required if provider is 'openai')
                                    // ENV: OPENAI_API_KEY
-
   openaiModel?: string;            // OpenAI model (default: "text-embedding-3-small")
                                    // ENV: OPENAI_MODEL
-
   // Gemini Configuration
   geminiApiKey?: string;           // Gemini API key (required if provider is 'gemini')
                                    // ENV: GEMINI_API_KEY
-
-  geminiModel?: string;            // Gemini model (default: "text-embedding-004")
+  geminiModel?: string;            // Gemini model (default: "gemini-embedding-001")
                                    // ENV: GEMINI_MODEL
-
   // VoyageAI Configuration
   voyageApiKey?: string;           // VoyageAI API key (required if provider is 'voyage')
                                    // ENV: VOYAGE_API_KEY
-
   voyageModel?: string;            // VoyageAI model (default: "voyage-3.5-lite")
                                    // ENV: VOYAGE_MODEL
-
   // Cache Configuration
   minProximity?: number;           // 0-1, similarity threshold (default: 0.9)
                                    // ENV: CACHE_MIN_PROXIMITY
-
   dbUri?: string;                  // LanceDB URI (default: "./lancedb")
                                    // ENV: LANCEDB_URI
-
   tableName?: string;              // Table name (default: "semantic_cache")
                                    // ENV: CACHE_TABLE_NAME
-
   namespace?: string;              // Optional namespace
                                    // ENV: CACHE_NAMESPACE
 };
@@ -209,7 +199,7 @@ type SemanticCacheConfig = {
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `GEMINI_API_KEY` | Gemini API key | - |
-| `GEMINI_MODEL` | Gemini embedding model | `text-embedding-004` |
+| `GEMINI_MODEL` | Gemini embedding model | `gemini-embedding-001` |
 
 **VoyageAI**
 | Variable | Description | Default |
@@ -269,25 +259,6 @@ const cache = new SemanticCache({
 });
 ```
 
-### MinIO Example (Local Development)
-
-```typescript
-import { SemanticCache } from "sematic-cache";
-
-const cache = new SemanticCache({
-  provider: 'voyage',
-  voyageApiKey: process.env.VOYAGE_API_KEY!,
-  dbUri: "s3://my-bucket/cache-data",
-  storageOptions: {
-    awsAccessKeyId: "minioadmin",
-    awsSecretAccessKey: "minioadmin",
-    region: "us-east-1",
-    endpoint: "http://localhost:9000",
-    allowHttp: true // Required for HTTP endpoints
-  }
-});
-```
-
 ### Using Environment Variables for Cloud Storage
 
 Set these in your `.env` file:
@@ -308,62 +279,6 @@ Then simply instantiate without arguments:
 const cache = new SemanticCache();
 ```
 
-## Provider Examples
-
-### Using OpenAI
-
-```typescript
-import { SemanticCache } from "sematic-cache";
-
-const cache = new SemanticCache({
-  provider: 'openai',
-  openaiApiKey: process.env.OPENAI_API_KEY!,
-  openaiModel: 'text-embedding-3-small' // or 'text-embedding-3-large'
-});
-
-await cache.set("What is the speed of light?", "299,792,458 meters per second");
-await delay(1000);
-
-const result = await cache.get("How fast does light travel?");
-console.log(result); // "299,792,458 meters per second"
-```
-
-### Using Google Gemini
-
-```typescript
-import { SemanticCache } from "sematic-cache";
-
-const cache = new SemanticCache({
-  provider: 'gemini',
-  geminiApiKey: process.env.GEMINI_API_KEY!,
-  geminiModel: 'text-embedding-004'
-});
-
-await cache.set("What is the speed of light?", "299,792,458 meters per second");
-await delay(1000);
-
-const result = await cache.get("How fast does light travel?");
-console.log(result); // "299,792,458 meters per second"
-```
-
-### Using VoyageAI
-
-```typescript
-import { SemanticCache } from "sematic-cache";
-
-const cache = new SemanticCache({
-  provider: 'voyage',
-  voyageApiKey: process.env.VOYAGE_API_KEY!,
-  voyageModel: 'voyage-3.5-lite' // or 'voyage-3'
-});
-
-await cache.set("What is the speed of light?", "299,792,458 meters per second");
-await delay(1000);
-
-const result = await cache.get("How fast does light travel?");
-console.log(result); // "299,792,458 meters per second"
-```
-
 ## Examples
 
 The following examples demonstrate how you can utilize Sematic Cache in various use cases:
@@ -377,7 +292,7 @@ The following examples demonstrate how you can utilize Sematic Cache in various 
 await semanticCache.set("Capital of France", "Paris");
 await delay(1000);
 
-// 👇 outputs "Paris"
+// Outputs "Paris"
 const result = await semanticCache.get("What's the capital of France?");
 ```
 
@@ -387,7 +302,7 @@ const result = await semanticCache.get("What's the capital of France?");
 await semanticCache.set("largest city in USA by population", "New York");
 await delay(1000);
 
-// 👇 outputs "New York"
+// Outputs "New York"
 const result = await semanticCache.get("which is the most populated city in the USA?");
 ```
 
@@ -399,7 +314,7 @@ Note: VoyageAI embedding models support multiple languages.
 await semanticCache.set("German Chancellor", "Olaf Scholz");
 await delay(1000);
 
-// 👇 "Who is the chancellor of Germany?" -> outputs "Olaf Scholz"
+// "Who is the chancellor of Germany?" -> outputs "Olaf Scholz"
 const result = await semanticCache.get("Wer ist der Bundeskanzler von Deutschland?");
 ```
 
@@ -409,7 +324,7 @@ const result = await semanticCache.get("Wer ist der Bundeskanzler von Deutschlan
 await semanticCache.set("year in which the Berlin wall fell", "1989");
 await delay(1000);
 
-// 👇 outputs "1989"
+// Outputs "1989"
 const result = await semanticCache.get("what's the year the Berlin wall destroyed?");
 ```
 
@@ -421,10 +336,10 @@ await semanticCache.set("the healthiest drink on a hot day", "water");
 
 await delay(1000);
 
-// 👇 outputs "water"
+// Outputs "water"
 const result = await semanticCache.get("what should i drink when it's hot outside?");
 
-// 👇 outputs "H2O"
+// Outputs "H2O"
 const result = await semanticCache.get("tell me water's chemical formula");
 ```
 

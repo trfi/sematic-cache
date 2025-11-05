@@ -13,7 +13,7 @@ async function runGeminiExample() {
   const cache = new SemanticCache({
     provider: 'gemini',
     geminiApiKey: process.env.GEMINI_API_KEY!,
-    geminiModel: 'text-embedding-004',
+    geminiModel: 'gemini-embedding-001',
     minProximity: 0.85
   })
 

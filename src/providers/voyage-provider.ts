@@ -1,5 +1,5 @@
 import { VoyageAIClient } from 'voyageai'
-import { EmbeddingProvider } from './embedding-provider'
+import { type EmbeddingProvider } from './embedding-provider'
 
 /**
  * VoyageAI embedding provider implementation

@@ -1,5 +1,5 @@
 import { connect, Connection, Table } from '@lancedb/lancedb'
-import { EmbeddingProvider, EmbeddingProviderFactory, ProviderConfig } from './providers'
+import { type EmbeddingProvider, EmbeddingProviderFactory, type ProviderConfig } from './providers'
 
 // LanceDB expects Record<string, unknown> for data
 interface CacheRecord extends Record<string, unknown> {

@@ -1,4 +1,4 @@
-import { EmbeddingProvider } from './embedding-provider'
+import { type EmbeddingProvider } from './embedding-provider'
 
 /**
  * OpenAI embedding provider implementation
